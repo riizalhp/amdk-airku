@@ -13,10 +13,16 @@ return new class extends Migration
     {
         Schema::create('distributions', function (Blueprint $table) {
             $table->id();
+
+            // PASTIKAN SEMUA FOREIGN KEY SEPERTI INI
+            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('store_id')->constrained('stores');
             $table->foreignId('fleet_id')->constrained('fleets');
-            $table->foreignId('driver_id')->constrained('users');
+            
+            // Kolom-kolom lain
             $table->date('distribution_date');
-            $table->enum('status', ['planned', 'in_progress', 'completed', 'cancelled'])->default('planned');
+            $table->enum('status', ['pending', 'on_progress', 'completed', 'cancelled']);
+
             $table->timestamps();
         });
     }
