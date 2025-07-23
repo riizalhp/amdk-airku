@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class StoreController extends Controller
@@ -14,8 +15,11 @@ class StoreController extends Controller
      */
     public function index()
     {
+        // Ambil semua data toko beserta relasi pesanan terakhirnya
+        $stores = Store::with('latestOrder')->get();
+
         return Inertia::render('Admin/Stores/Index', [
-            'stores' => Store::all(),
+            'stores' => $stores,
             'flash' => session()->only(['success', 'error']),
         ]);
     }
@@ -30,19 +34,11 @@ class StoreController extends Controller
             'address' => 'required|string',
             'pic_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
-        Store::create([
-            'name' => $request->name,
-            'address' => $request->address,
-            'pic_name' => $request->pic_name,
-            'phone_number' => $request->phone_number,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'created_by_user_id' => Auth::id(),
-        ]);
+        Store::create(array_merge($request->all(), ['created_by_user_id' => Auth::id()]));
 
         return redirect()->route('stores.index')->with('success', 'Toko berhasil ditambahkan.');
     }
@@ -57,8 +53,8 @@ class StoreController extends Controller
             'address' => 'required|string',
             'pic_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
         $store->update($request->all());
@@ -71,7 +67,12 @@ class StoreController extends Controller
      */
     public function destroy(Store $store)
     {
-        $store->delete();
+        try {
+            $store->delete();
+        } catch (\Exception $e) {
+            Log::error("Gagal menghapus Toko ID {$store->id}: {$e->getMessage()}");
+            return redirect()->route('stores.index')->with('error', 'Gagal menghapus! Toko ini mungkin memiliki data terkait.');
+        }
 
         return redirect()->route('stores.index')->with('success', 'Toko berhasil dihapus.');
     }

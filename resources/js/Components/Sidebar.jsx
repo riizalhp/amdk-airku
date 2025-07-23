@@ -9,9 +9,9 @@ export default function Sidebar({ open, user }) {
     const menuItems = [
         { name: 'Dashboard', routeName: 'dashboard', path: '/dashboard' },
         { name: 'Manajemen User', routeName: 'users.index', path: '/users' },
-        { name: 'Manajemen Toko', routeName: 'dashboard', path: '/stores' },
-        { name: 'Manajemen Armada', routeName: 'dashboard', path: '/fleets' },
-        { name: 'Manajemen Pesanan', routeName: 'dashboard', path: '/orders' },
+        { name: 'Manajemen Toko', routeName: 'stores.index', path: '/stores' },
+        { name: 'Manajemen Armada', routeName: 'fleets.index', path: '/fleets' },
+        { name: 'Manajemen Pesanan', routeName: 'orders.index', path: '/orders' },
         { name: 'Perencanaan Rute', routeName: 'dashboard', path: '/routes' },
         { name: 'Jadwal Kunjungan', routeName: 'dashboard', path: '/visits' },
         { name: 'Laporan Survei', routeName: 'dashboard', path: '/surveys' },

@@ -25,10 +25,16 @@ class Store extends Model
     ];
 
     /**
-     * Get the user who created the store.
+     * Relasi untuk mendapatkan satu pesanan (order) terakhir dari toko ini.
+     * Ini akan mengambil order dengan 'created_at' terbaru.
      */
-    public function createdBy()
+    public function latestOrder()
     {
-        return $this->belongsTo(User::class, 'created_by_user_id');
+        return $this->hasOne(Order::class)->latestOfMany();
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
     }
 }
