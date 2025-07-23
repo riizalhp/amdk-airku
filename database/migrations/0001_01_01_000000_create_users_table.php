@@ -9,20 +9,19 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            // Kita hapus email_verified_at karena tidak terlalu perlu untuk sistem internal ini
-            $table->string('password');
-            // Kita tambahkan kolom role dan phone_number
-            $table->enum('role', ['admin', 'sales', 'driver']);
-            $table->string('phone_number')->nullable();
-            // Kita hapus rememberToken karena ini lebih untuk web tradisional
-            $table->timestamps();
-        });
+        public function up(): void
+        {
+            Schema::create('users', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->timestamp('email_verified_at')->nullable();
+                $table->string('password');
+                $table->enum('role', ['admin', 'sales', 'driver']); // PASTIKAN INI ADA
+                $table->string('phone_number')->nullable();      // PASTIKAN INI ADA
+                $table->rememberToken();                         // PASTIKAN INI ADA
+                $table->timestamps();
+            });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
