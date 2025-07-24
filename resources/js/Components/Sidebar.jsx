@@ -9,6 +9,7 @@ export default function Sidebar({ open, user }) {
     const menuItems = [
         { name: 'Dashboard', routeName: 'dashboard', path: '/dashboard' },
         { name: 'Manajemen User', routeName: 'users.index', path: '/users' },
+        { name: 'Manajemen Produk', routeName: 'stores.index', path: '/stores' },
         { name: 'Manajemen Toko', routeName: 'stores.index', path: '/stores' },
         { name: 'Manajemen Armada', routeName: 'fleets.index', path: '/fleets' },
         { name: 'Manajemen Pesanan', routeName: 'orders.index', path: '/orders' },
@@ -49,7 +50,7 @@ export default function Sidebar({ open, user }) {
                                 : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
                         }`}
                     >
-                        <span className="text-lg">{['🏠', '👥', '🏪', '🚚', '🛒', '🗺️', '🗓️', '📊'][index]}</span>
+                        <span className="text-lg">{['🏠', '👥','📦', '🏪', '🚚', '🛒', '🗺️', '🗓️', '📊'][index]}</span>
                         <span className="font-medium">{item.name}</span>
                     </Link>
                 ))}
