@@ -42,15 +42,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Manajemen Produk
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     
     // Manajemen Toko
     Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
+    Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
+    Route::put('/stores/{store}', [StoreController::class, 'update'])->name('stores.update');
+    Route::delete('/stores/{store}', [StoreController::class, 'destroy'])->name('stores.destroy');
     
     // Manajemen Armada
     Route::get('/fleets', [FleetController::class, 'index'])->name('fleets.index');
+    Route::post('/fleets', [FleetController::class, 'store'])->name('fleets.store');
+    Route::put('/fleets/{fleet}', [FleetController::class, 'update'])->name('fleets.update');
+    Route::delete('/fleets/{fleet}', [FleetController::class, 'destroy'])->name('fleets.destroy');
     
     // Manajemen Pesanan
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::put('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+    Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
     
     // Perencanaan Rute
     Route::get('/route-planning', [RoutePlanningController::class, 'index'])->name('route-planning.index');

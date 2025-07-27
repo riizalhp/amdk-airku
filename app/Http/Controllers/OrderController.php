@@ -5,38 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Store;
+use App\Models\User;
+use App\Notifications\LowStockNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 
 class OrderController extends Controller
 {
-    /**
-     * Menampilkan halaman daftar pesanan dengan total kuantitas barang.
-     */
     public function index()
     {
-        // Mengambil semua data pesanan, diurutkan dari yang terbaru.
-        // `with('store')` mengambil data toko terkait untuk efisiensi.
-        $orders = Order::with('store')->latest()->get()->map(function ($order) {
-            // Untuk setiap pesanan, kita buat properti baru 'total_quantity'.
-            // Isinya adalah hasil penjumlahan dari kolom 'quantity' di semua item yang terkait.
-            $order->total_quantity = $order->orderItems()->sum('quantity');
-            return $order;
-        });
-
-        // Mengirim data pesanan yang sudah dimodifikasi ke komponen React 'Admin/Orders/Index'.
-        // Kita juga mengirim daftar toko dan produk untuk digunakan di form tambah/edit.
         return Inertia::render('Admin/Orders/Index', [
-            'orders' => $orders,
-            'stores' => Store::all(['id', 'name']),
-            'products' => Product::all(['id', 'name', 'price']),
+            'orders' => Order::with('store', 'products')->latest()->get(),
+            'stores' => Store::all(),
+            'products' => Product::where('stock', '>', 0)->get(),
         ]);
     }
 
-    /**
-     * Menyimpan pesanan baru ke database.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -47,54 +33,52 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        // Menggunakan transaction untuk memastikan semua query berhasil atau semua dibatalkan.
-        DB::transaction(function () use ($request) {
-            $totalAmount = 0;
-            $itemsToCreate = [];
+        try {
+            DB::transaction(function () use ($request) {
+                // Validasi stok sebelum membuat pesanan
+                foreach ($request->items as $item) {
+                    $product = Product::find($item['product_id']);
+                    if ($product->stock < $item['quantity']) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'items' => "Stok untuk produk '{$product->name}' tidak mencukupi. Sisa stok: {$product->stock}.",
+                        ]);
+                    }
+                }
 
-            // Loop pertama untuk menghitung total harga
-            foreach ($request->items as $item) {
-                $product = Product::find($item['product_id']);
-                $totalAmount += $product->price * $item['quantity'];
-                
-                $itemsToCreate[] = [
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'price_per_item' => $product->price,
-                ];
-            }
+                // Buat Pesanan
+                $order = Order::create([
+                    'store_id' => $request->store_id,
+                    'user_id' => auth()->id(),
+                    'order_date' => $request->order_date,
+                    'total_amount' => 0,
+                    'status' => 'pending',
+                ]);
 
-            // Buat pesanan utama
-            $order = Order::create([
-                'store_id' => $request->store_id,
-                'order_date' => $request->order_date,
-                'total_amount' => $totalAmount,
-                'status' => 'pending',
-            ]);
+                $totalAmount = 0;
 
-            // Buat semua item pesanan yang terhubung ke pesanan utama
-            $order->orderItems()->createMany($itemsToCreate);
-        });
+                // Proses setiap item pesanan
+                foreach ($request->items as $item) {
+                    $product = Product::find($item['product_id']);
+                    $quantity = $item['quantity'];
 
-        return redirect()->route('orders.index')->with('success', 'Pesanan berhasil dibuat.');
-    }
+                    $order->products()->attach($product->id, ['quantity' => $quantity, 'price' => $product->price]);
+                    $totalAmount += $product->price * $quantity;
+                    $product->decrement('stock', $quantity);
 
-    /**
-     * (Placeholder) Memperbarui data pesanan di database.
-     */
-    public function update(Request $request, Order $order)
-    {
-        // Logika untuk validasi dan memperbarui pesanan akan ditambahkan di sini
-        return redirect()->route('orders.index')->with('success', 'Pesanan berhasil diperbarui.');
-    }
+                    // Cek stok setelah dikurangi
+                    $product->refresh(); 
+                    if ($product->stock <= $product->low_stock_threshold) {
+                        $admins = User::where('role', 'admin')->get();
+                        Notification::send($admins, new LowStockNotification($product));
+                    }
+                }
 
-    /**
-     * (Placeholder) Menghapus pesanan dari database.
-     */
-    public function destroy(Order $order)
-    {
-        // Logika untuk menghapus pesanan akan ditambahkan di sini
-        $order->delete();
-        return redirect()->route('orders.index')->with('success', 'Pesanan berhasil dihapus.');
+                $order->update(['total_amount' => $totalAmount]);
+            });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors());
+        }
+
+        return redirect()->route('orders.index');
     }
 }
