@@ -9,7 +9,7 @@ export default function Sidebar({ open, user }) {
     const menuItems = [
         { name: 'Dashboard', routeName: 'dashboard', path: '/dashboard' },
         { name: 'Manajemen User', routeName: 'users.index', path: '/users' },
-        { name: 'Manajemen Produk', routeName: 'stores.index', path: '/stores' },
+        { name: 'Manajemen Produk', routeName: 'products.index', path: '/products' },
         { name: 'Manajemen Toko', routeName: 'stores.index', path: '/stores' },
         { name: 'Manajemen Armada', routeName: 'fleets.index', path: '/fleets' },
         { name: 'Manajemen Pesanan', routeName: 'orders.index', path: '/orders' },
